@@ -1,10 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsEmail, IsEnum, IsNumber, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
 import { LeadSource } from '../entities/lead.entity';
 
 export class CreateLeadDto {
-    @ApiProperty({ example: 'María García', maxLength: 255 })
+    @ApiProperty({ example: 'María García', minLength: 2, maxLength: 255 })
     @IsString()
+    @MinLength(2)
     @MaxLength(255)
     nombre!: string;
 

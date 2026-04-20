@@ -1,98 +1,321 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# OMC Backend — Leads API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+REST API para gestión de leads con autenticación JWT e integración con IA. Construida con NestJS, PostgreSQL y soporte para múltiples proveedores de IA (Groq, Gemini, OpenAI).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Swagger UI disponible en** `http://localhost:3000/api/docs`
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tech Stack
 
-## Project setup
+| Capa | Tecnología |
+|------|------------|
+| Framework | NestJS 11 |
+| Base de datos | PostgreSQL 16 + TypeORM |
+| Autenticación | JWT + Passport |
+| Documentación | Swagger / OpenAPI |
+| IA | Groq / Gemini / OpenAI (intercambiable) |
+| Validación | class-validator + class-transformer |
+| Rate limiting | @nestjs/throttler |
+| Contenedores | Docker + Docker Compose |
 
-```bash
-$ npm install
-```
+---
 
-## Compile and run the project
+## Requisitos previos
+
+- Node.js >= 20
+- npm >= 10
+- PostgreSQL 16 (o Docker)
+
+---
+
+## Instalación sin Docker
 
 ```bash
-# development
-$ npm run start
+# 1. Clonar e instalar dependencias
+git clone <repo-url>
+cd omc-backend
+npm install
 
-# watch mode
-$ npm run start:dev
+# 2. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus valores (ver sección de variables)
 
-# production mode
-$ npm run start:prod
+# 3. Las tablas se crean automáticamente al iniciar (synchronize: true en dev)
+# 4. Poblar la base de datos con datos de prueba
+npm run seed
+
+# 5. Iniciar en modo desarrollo
+npm run start:dev
 ```
 
-## Run tests
+---
+
+## Instalación con Docker
 
 ```bash
-# unit tests
-$ npm run test
+# 1. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus valores
 
-# e2e tests
-$ npm run test:e2e
+# 2. Levantar servicios (API + PostgreSQL)
+docker compose up -d
 
-# test coverage
-$ npm run test:cov
+# 3. Poblar la base de datos (una sola vez)
+docker compose exec api npm run seed
+
+# 4. Detener servicios
+docker compose down
 ```
 
-## Deployment
+> La base de datos persiste en `./postgres`. Para borrarla completamente: `docker compose down -v`
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Variables de entorno
+
+| Variable | Descripción | Ejemplo | Requerida |
+|----------|-------------|---------|-----------|
+| `DB_HOST` | Host de PostgreSQL | `localhost` / `postgres` (Docker) | ✅ |
+| `DB_PORT` | Puerto de PostgreSQL | `5432` | ✅ |
+| `DB_USERNAME` | Usuario de PostgreSQL | `omc_user` | ✅ |
+| `DB_PASSWORD` | Contraseña de PostgreSQL | `secret` | ✅ |
+| `DB_NAME` | Nombre de la base de datos | `omc_database` | ✅ |
+| `JWT_SECRET` | Secreto para firmar tokens JWT | cadena aleatoria ≥ 32 chars | ✅ |
+| `AI_PROVIDER` | Proveedor de IA activo | `groq` \| `openai` \| `gemini` | ❌ (default: `groq`) |
+| `AI_PROVIDER_API_KEY` | API key del proveedor seleccionado | `gsk_...` / `sk-...` | ❌ (mock si falta) |
+| `PORT` | Puerto del servidor HTTP | `3000` | ❌ (default: `3000`) |
+
+### Obtener API keys gratuitas
+
+| Proveedor | Registro | Modelo usado |
+|-----------|----------|--------------|
+| **Groq** (recomendado) | [console.groq.com](https://console.groq.com) | `llama-3.3-70b-versatile` |
+| **Gemini** | [aistudio.google.com](https://aistudio.google.com) | `gemini-1.5-flash` |
+| **OpenAI** | [platform.openai.com](https://platform.openai.com) | `gpt-4o-mini` (requiere billing) |
+
+---
+
+## Endpoints
+
+Todos los endpoints de `/leads` requieren el header `Authorization: Bearer <token>`.
+
+### Auth
+
+#### Registrar usuario
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+curl -X POST http://localhost:3000/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Admin OMC",
+    "email": "admin@omc.com",
+    "password": "Admin123!"
+  }'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+#### Login
 
-## Resources
+```bash
+curl -X POST http://localhost:3000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "email": "admin@omc.com",
+    "password": "Admin123!"
+  }'
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+**Respuesta:**
+```json
+{
+  "id": "uuid",
+  "name": "Admin OMC",
+  "email": "admin@omc.com",
+  "role": "admin",
+  "token": "eyJhbGci..."
+}
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+#### Validar token
 
-## Support
+```bash
+curl http://localhost:3000/auth/check-status \
+  -H 'Authorization: Bearer <token>'
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+### Leads
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+> Reemplaza `<token>` con el JWT obtenido en login.
 
-## License
+#### Crear lead
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+curl -X POST http://localhost:3000/leads \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <token>' \
+  -d '{
+    "nombre": "María García",
+    "email": "maria@example.com",
+    "telefono": "+57 300 123 4567",
+    "fuente": "instagram",
+    "productoInteres": "Curso de Marketing Digital",
+    "presupuesto": 150
+  }'
+```
+
+#### Listar leads con paginación y filtros
+
+```bash
+# Todos los leads
+curl 'http://localhost:3000/leads' \
+  -H 'Authorization: Bearer <token>'
+
+# Con filtros
+curl 'http://localhost:3000/leads?page=1&limit=10&fuente=instagram&from=2026-01-01&to=2026-12-31' \
+  -H 'Authorization: Bearer <token>'
+```
+
+**Parámetros query disponibles:**
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `page` | number | Página (default: 1) |
+| `limit` | number | Resultados por página, máx 100 (default: 10) |
+| `fuente` | string | `instagram` \| `facebook` \| `landing_page` \| `referido` \| `otro` |
+| `from` | string | Fecha inicio `YYYY-MM-DD` (inclusive) |
+| `to` | string | Fecha fin `YYYY-MM-DD` (inclusive) |
+
+**Respuesta:**
+```json
+{
+  "data": [...],
+  "meta": { "total": 12, "page": 1, "limit": 10, "lastPage": 2 }
+}
+```
+
+#### Estadísticas
+
+```bash
+curl http://localhost:3000/leads/stats \
+  -H 'Authorization: Bearer <token>'
+```
+
+**Respuesta:**
+```json
+{
+  "total": 12,
+  "active": 10,
+  "inactive": 2,
+  "avgPresupuesto": 147.5,
+  "lastSevenDays": 4,
+  "bySource": [
+    { "fuente": "instagram", "count": "5" },
+    { "fuente": "facebook", "count": "3" }
+  ]
+}
+```
+
+#### Resumen IA
+
+```bash
+# Sin filtros — analiza todos los leads
+curl -X POST http://localhost:3000/leads/ai/summary \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <token>' \
+  -d '{}'
+
+# Con filtros opcionales
+curl -X POST http://localhost:3000/leads/ai/summary \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <token>' \
+  -d '{
+    "fuente": "instagram",
+    "from": "2026-01-01",
+    "to": "2026-12-31"
+  }'
+```
+
+**Respuesta:**
+```json
+{
+  "summary": "1. Resumen general: ...\n2. Fuente principal: ...\n3. Recomendaciones: ...",
+  "leadsAnalyzed": 5
+}
+```
+
+#### Obtener lead por ID
+
+```bash
+curl http://localhost:3000/leads/<uuid> \
+  -H 'Authorization: Bearer <token>'
+```
+
+#### Actualizar lead (parcial)
+
+```bash
+curl -X PATCH http://localhost:3000/leads/<uuid> \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <token>' \
+  -d '{
+    "presupuesto": 300,
+    "productoInteres": "Mentoría 1 a 1"
+  }'
+```
+
+#### Eliminar lead (soft delete)
+
+```bash
+curl -X DELETE http://localhost:3000/leads/<uuid> \
+  -H 'Authorization: Bearer <token>'
+```
+
+> Retorna `204 No Content`. El registro no se borra físicamente — queda con `deleted_at` registrado.
+
+---
+
+## Reglas de contraseña
+
+Mínimo 6 caracteres, máximo 50, al menos una mayúscula, una minúscula y un número o carácter especial.
+
+Ejemplo válido: `Admin123!`
+
+---
+
+## Decisiones técnicas
+
+### Soft delete en leads
+Los leads eliminados conservan su `deleted_at`. TypeORM los excluye automáticamente de todas las consultas normales, pero el registro queda disponible para auditoría o recuperación futura.
+
+### Strategy / Adapter para IA
+`OpenAiCompatibleProvider` soporta Groq, Gemini y OpenAI con el mismo SDK — los tres exponen endpoints compatibles con la API de OpenAI. Cambiar de proveedor requiere solo modificar `AI_PROVIDER` en `.env`, sin tocar código. Si no hay API key configurada, el servicio cae automáticamente a `MockProvider`.
+
+### JWT con payload extendido
+El token incluye `{ id, name, email, role }`. Esto evita consultas a la base de datos en cada request autenticado — el guard lee directamente del payload.
+
+### `@Auth()` como decorator compuesto
+`@Auth()` aplica automáticamente `UseGuards`, `RoleProtected` y `ApiBearerAuth`. Proteger un endpoint nuevo requiere una sola anotación y queda documentado en Swagger sin configuración adicional.
+
+### `synchronize: true` solo en desarrollo
+TypeORM sincroniza el schema automáticamente en desarrollo. **Debe desactivarse en producción** (`synchronize: false`) y reemplazarse por migraciones explícitas para evitar pérdida accidental de datos.
+
+### Rate limiting global
+ThrottlerModule limita a 100 requests por minuto por IP. Protección básica contra abuso sin infraestructura adicional.
+
+### Orden de rutas en NestJS
+`GET /leads/stats` y `POST /leads/ai/summary` están declarados **antes** de `GET /leads/:id`. NestJS resuelve rutas en orden de declaración — si `:id` fuera primero, los segmentos literales `stats` y `ai` serían interpretados como UUIDs y fallarían la validación.
+
+---
+
+## Scripts disponibles
+
+| Script | Descripción |
+|--------|-------------|
+| `npm run start:dev` | Servidor en modo desarrollo con hot-reload |
+| `npm run build` | Compilar para producción |
+| `npm run start:prod` | Ejecutar build de producción |
+| `npm run seed` | Poblar la base de datos con datos de prueba |
+| `npm run lint` | Linter con auto-fix |
+| `npm run test` | Tests unitarios |
+| `npm run test:cov` | Tests con reporte de cobertura |

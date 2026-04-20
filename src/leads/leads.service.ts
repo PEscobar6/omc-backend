@@ -44,7 +44,10 @@ export class LeadsService {
   }
 
   async getStats() {
-    const [bySource, total, active] = await Promise.all([
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [bySource, total, active, avgResult, lastSevenDays] = await Promise.all([
       this.leadRepository
         .createQueryBuilder('lead')
         .select('lead.fuente', 'fuente')
@@ -53,12 +56,22 @@ export class LeadsService {
         .getRawMany(),
       this.leadRepository.count(),
       this.leadRepository.count({ where: { status: true } }),
+      this.leadRepository
+        .createQueryBuilder('lead')
+        .select('AVG(lead.presupuesto)', 'avg')
+        .getRawOne(),
+      this.leadRepository
+        .createQueryBuilder('lead')
+        .where('lead.createdAt >= :sevenDaysAgo', { sevenDaysAgo })
+        .getCount(),
     ]);
 
     return {
       total,
       active,
       inactive: total - active,
+      avgPresupuesto: avgResult?.avg ? parseFloat(avgResult.avg) : 0,
+      lastSevenDays,
       bySource,
     };
   }
