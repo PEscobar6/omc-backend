@@ -105,7 +105,7 @@ Todos los endpoints de `/leads` requieren el header `Authorization: Bearer <toke
 #### Registrar usuario
 
 ```bash
-curl -X POST http://localhost:3000/auth/register \
+curl -X POST http://localhost:3000/v1/auth/register \
   -H 'Content-Type: application/json' \
   -d '{
     "name": "Admin OMC",
@@ -117,7 +117,7 @@ curl -X POST http://localhost:3000/auth/register \
 #### Login
 
 ```bash
-curl -X POST http://localhost:3000/auth/login \
+curl -X POST http://localhost:3000/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{
     "email": "admin@omc.com",
@@ -139,7 +139,7 @@ curl -X POST http://localhost:3000/auth/login \
 #### Validar token
 
 ```bash
-curl http://localhost:3000/auth/check-status \
+curl http://localhost:3000/v1/auth/check-status \
   -H 'Authorization: Bearer <token>'
 ```
 
@@ -152,7 +152,7 @@ curl http://localhost:3000/auth/check-status \
 #### Crear lead
 
 ```bash
-curl -X POST http://localhost:3000/leads \
+curl -X POST http://localhost:3000/v1/leads \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <token>' \
   -d '{
@@ -169,11 +169,11 @@ curl -X POST http://localhost:3000/leads \
 
 ```bash
 # Todos los leads
-curl 'http://localhost:3000/leads' \
+curl 'http://localhost:3000/v1/leads' \
   -H 'Authorization: Bearer <token>'
 
 # Con filtros
-curl 'http://localhost:3000/leads?page=1&limit=10&fuente=instagram&from=2026-01-01&to=2026-12-31' \
+curl 'http://localhost:3000/v1/leads?page=1&limit=10&fuente=instagram&from=2026-01-01&to=2026-12-31' \
   -H 'Authorization: Bearer <token>'
 ```
 
@@ -198,7 +198,7 @@ curl 'http://localhost:3000/leads?page=1&limit=10&fuente=instagram&from=2026-01-
 #### Estadísticas
 
 ```bash
-curl http://localhost:3000/leads/stats \
+curl http://localhost:3000/v1/leads/stats \
   -H 'Authorization: Bearer <token>'
 ```
 
@@ -221,13 +221,13 @@ curl http://localhost:3000/leads/stats \
 
 ```bash
 # Sin filtros — analiza todos los leads
-curl -X POST http://localhost:3000/leads/ai/summary \
+curl -X POST http://localhost:3000/v1/leads/ai/summary \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <token>' \
   -d '{}'
 
 # Con filtros opcionales
-curl -X POST http://localhost:3000/leads/ai/summary \
+curl -X POST http://localhost:3000/v1/leads/ai/summary \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <token>' \
   -d '{
@@ -248,14 +248,14 @@ curl -X POST http://localhost:3000/leads/ai/summary \
 #### Obtener lead por ID
 
 ```bash
-curl http://localhost:3000/leads/<uuid> \
+curl http://localhost:3000/v1/leads/<uuid> \
   -H 'Authorization: Bearer <token>'
 ```
 
 #### Actualizar lead (parcial)
 
 ```bash
-curl -X PATCH http://localhost:3000/leads/<uuid> \
+curl -X PATCH http://localhost:3000/v1/leads/<uuid> \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <token>' \
   -d '{
@@ -267,7 +267,7 @@ curl -X PATCH http://localhost:3000/leads/<uuid> \
 #### Eliminar lead (soft delete)
 
 ```bash
-curl -X DELETE http://localhost:3000/leads/<uuid> \
+curl -X DELETE http://localhost:3000/v1/leads/<uuid> \
   -H 'Authorization: Bearer <token>'
 ```
 
