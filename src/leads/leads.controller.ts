@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { LeadsService } from './leads.service';
+import { AiSummaryDto } from './dto/ai-summary.dto';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { FilterLeadDto } from './dto/filter-lead.dto';
@@ -35,6 +36,13 @@ export class LeadsController {
     return this.leadsService.getStats();
   }
 
+  @Post('ai/summary')
+  @ApiOperation({ summary: 'Generate AI summary of leads using GPT' })
+  @ApiResponse({ status: 201, description: 'Returns summary text and number of leads analyzed' })
+  getAiSummary(@Body() dto: AiSummaryDto) {
+    return this.leadsService.getAiSummary(dto);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a lead by UUID' })
   @ApiResponse({ status: 200, description: 'Lead found' })
@@ -53,7 +61,7 @@ export class LeadsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Soft delete a lead (sets deleted_at)' })
+  @ApiOperation({ summary: 'Delete a lead' })
   @ApiResponse({ status: 204, description: 'Lead deleted' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
   remove(@Param('id', ParseUUIDPipe) id: string) {

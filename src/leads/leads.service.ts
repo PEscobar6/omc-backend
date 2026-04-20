@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { AiService } from '../ai/ai.service';
+import { AiSummaryDto } from './dto/ai-summary.dto';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { FilterLeadDto } from './dto/filter-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
@@ -12,6 +14,7 @@ export class LeadsService {
   constructor(
     @InjectRepository(Lead)
     private readonly leadRepository: Repository<Lead>,
+    private readonly aiService: AiService,
   ) {}
 
   async create(createLeadDto: CreateLeadDto): Promise<Lead> {
@@ -58,6 +61,26 @@ export class LeadsService {
       inactive: total - active,
       bySource,
     };
+  }
+
+  async getAiSummary(dto: AiSummaryDto) {
+    const { fuente, from, to } = dto;
+
+    const qb = this.leadRepository.createQueryBuilder('lead');
+
+    if (fuente) qb.andWhere('lead.fuente = :fuente', { fuente });
+    if (from)   qb.andWhere('lead.createdAt >= :from', { from: new Date(from) });
+    if (to)     qb.andWhere('lead.createdAt <= :to',   { to: new Date(to) });
+
+    const leads = await qb.orderBy('lead.createdAt', 'DESC').getMany();
+
+    if (leads.length === 0) {
+      return { summary: 'No se encontraron leads con los filtros aplicados.', leadsAnalyzed: 0 };
+    }
+
+    const summary = await this.aiService.generateLeadsSummary(leads);
+
+    return { summary, leadsAnalyzed: leads.length };
   }
 
   async findOne(id: string): Promise<Lead> {
