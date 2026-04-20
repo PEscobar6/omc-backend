@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CreateUserDto, LoginUserDto } from './dto';
 import { Auth, GetUser } from './decorators';
@@ -28,7 +28,6 @@ export class AuthController {
 
   @Get('check-status')
   @Auth()
-  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Validate token and get refreshed JWT' })
   @ApiResponse({ status: 200, description: 'Returns user data and a new JWT token' })
   @ApiResponse({ status: 401, description: 'Invalid or expired token' })

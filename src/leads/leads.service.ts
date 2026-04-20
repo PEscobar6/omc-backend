@@ -1,26 +1,79 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateLeadDto } from './dto/create-lead.dto';
+import { FilterLeadDto } from './dto/filter-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
+import { Lead } from './entities/lead.entity';
 
 @Injectable()
 export class LeadsService {
-  create(createLeadDto: CreateLeadDto) {
-    return 'This action adds a new lead';
+  constructor(
+    @InjectRepository(Lead)
+    private readonly leadRepository: Repository<Lead>,
+  ) {}
+
+  async create(createLeadDto: CreateLeadDto): Promise<Lead> {
+    const lead = this.leadRepository.create(createLeadDto);
+    return this.leadRepository.save(lead);
   }
 
-  findAll() {
-    return `This action returns all leads`;
+  async findAll(filters: FilterLeadDto) {
+    const { page = 1, limit = 10, fuente, from, to } = filters;
+
+    const qb = this.leadRepository.createQueryBuilder('lead');
+
+    if (fuente) qb.andWhere('lead.fuente = :fuente', { fuente });
+    if (from)   qb.andWhere('lead.createdAt >= :from', { from: new Date(from) });
+    if (to)     qb.andWhere('lead.createdAt <= :to',   { to: new Date(to) });
+
+    const [data, total] = await qb
+      .orderBy('lead.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      meta: { total, page, limit, lastPage: Math.ceil(total / limit) },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} lead`;
+  async getStats() {
+    const [bySource, total, active] = await Promise.all([
+      this.leadRepository
+        .createQueryBuilder('lead')
+        .select('lead.fuente', 'fuente')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('lead.fuente')
+        .getRawMany(),
+      this.leadRepository.count(),
+      this.leadRepository.count({ where: { status: true } }),
+    ]);
+
+    return {
+      total,
+      active,
+      inactive: total - active,
+      bySource,
+    };
   }
 
-  update(id: number, updateLeadDto: UpdateLeadDto) {
-    return `This action updates a #${id} lead`;
+  async findOne(id: string): Promise<Lead> {
+    const lead = await this.leadRepository.findOne({ where: { id } });
+    if (!lead) throw new NotFoundException(`Lead #${id} not found`);
+    return lead;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} lead`;
+  async update(id: string, updateLeadDto: UpdateLeadDto): Promise<Lead> {
+    const lead = await this.findOne(id);
+    Object.assign(lead, updateLeadDto);
+    return this.leadRepository.save(lead);
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.findOne(id);
+    await this.leadRepository.softDelete(id);
   }
 }
