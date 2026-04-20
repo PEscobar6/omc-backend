@@ -28,7 +28,7 @@ export class AuthController {
 
   @Get('check-status')
   @Auth()
-  @ApiBearerAuth()
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Validate token and get refreshed JWT' })
   @ApiResponse({ status: 200, description: 'Returns user data and a new JWT token' })
   @ApiResponse({ status: 401, description: 'Invalid or expired token' })
