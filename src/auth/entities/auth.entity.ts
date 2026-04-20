@@ -5,11 +5,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-
-export enum UserRole {
-    ADMIN = 'admin',
-    USER = 'user',
-}
+import { ValidRoles } from '../interfaces/valid-roles.interface';
 
 @Entity('users')
 export class User {
@@ -27,10 +23,10 @@ export class User {
 
     @Column({
         type: 'enum',
-        enum: UserRole,
-        default: UserRole.USER,
+        enum: ValidRoles,
+        default: ValidRoles.USER,
     })
-    role!: UserRole;
+    role!: ValidRoles;
 
     @Column({ default: true })
     isActive!: boolean;

@@ -2,7 +2,8 @@ import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Lead, LeadSource } from '../leads/entities/lead.entity';
 import 'dotenv/config';
-import { User, UserRole } from 'src/auth/entities/auth.entity';
+import { User } from '../auth/entities/auth.entity';
+import { ValidRoles } from '../auth/interfaces/valid-roles.interface';
 
 const dataSource = new DataSource({
   type: 'postgres',
@@ -31,7 +32,7 @@ async function seed() {
         name: 'Admin OMC',
         email: 'admin@omc.com',
         password: hashedPassword,
-        role: UserRole.ADMIN,
+        role: ValidRoles.ADMIN,
       }),
     );
     console.log('✅ Admin user created (admin@omc.com / Admin123!)');
